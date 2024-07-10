@@ -3,6 +3,15 @@
 namespace App\Filament\Resources\CategoryResource\RelationManagers;
 
 use Filament\Forms;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Group;
+use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
@@ -17,11 +26,31 @@ class PostsRelationManager extends RelationManager
     public function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Forms\Components\TextInput::make('title')
-                    ->required()
-                    ->maxLength(255),
-            ]);
+        ->schema([
+            Section::make("Create a post")
+                ->collapsible()
+                ->schema([
+                    TextInput::make('title')->rules(['min:2', 'max:10'])->required(),
+                    TextInput::make('slug')->unique(ignoreRecord: true)->required(),
+                    ColorPicker::make('color')->required(),
+                    MarkdownEditor::make('content')->required()->columnSpanFull(),
+                ])->columnSpan(2)->columns(2),
+
+            Group::make()->schema([
+                Section::make("Image")
+                    ->collapsible()
+                    ->schema([
+                        FileUpload::make('thumbnail')->disk('public')->directory('thumbnails'),
+
+                    ])->columnSpan(1),
+                Section::make("Meta")->schema([
+                    TagsInput::make('tags')->required(),
+                    Checkbox::make('published'),
+                ]),
+
+            ]),
+
+        ])->columns(3);
     }
 
     public function table(Table $table): Table
@@ -30,6 +59,8 @@ class PostsRelationManager extends RelationManager
             ->recordTitleAttribute('title')
             ->columns([
                 Tables\Columns\TextColumn::make('title'),
+                Tables\Columns\TextColumn::make('slug'),
+                Tables\Columns\CheckboxColumn::make('published'),
             ])
             ->filters([
                 //
