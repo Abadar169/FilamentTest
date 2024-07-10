@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PostResource\Pages;
 use App\Filament\Resources\PostResource\RelationManagers;
+use App\Filament\Resources\PostResource\RelationManagers\AuthorsRelationManager;
 use App\Models\Category;
 use App\Models\Post;
 use Filament\Forms;
@@ -57,10 +58,6 @@ class PostResource extends Resource
                             FileUpload::make('thumbnail')->disk('public')->directory('thumbnails'),
 
                         ])->columnSpan(1),
-                    Section::make("Meta")->schema([
-                        TagsInput::make('tags')->required(),
-                        Checkbox::make('published'),
-                    ]),
 
                 ]),
 
@@ -115,7 +112,7 @@ class PostResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AuthorsRelationManager::class
         ];
     }
 
