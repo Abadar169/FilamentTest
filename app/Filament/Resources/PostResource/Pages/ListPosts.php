@@ -5,7 +5,7 @@ namespace App\Filament\Resources\PostResource\Pages;
 use App\Filament\Resources\PostResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Resources\Pages\ListRecords\Tab;
+use Filament\Resources\Components\Tab;
 
 class ListPosts extends ListRecords
 {
