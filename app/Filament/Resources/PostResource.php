@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PostResource\Pages;
 use App\Filament\Resources\PostResource\RelationManagers;
 use App\Filament\Resources\PostResource\RelationManagers\AuthorsRelationManager;
+use App\Filament\Resources\PostResource\RelationManagers\CommentsRelationManager;
 use App\Models\Category;
 use App\Models\Post;
 use Filament\Forms;
@@ -15,6 +16,8 @@ use Filament\Forms\Components\Group;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -25,6 +28,7 @@ use Filament\Tables\Columns\CheckboxColumn;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 
 
@@ -38,30 +42,30 @@ class PostResource extends Resource
     {
         return $form
             ->schema([
-                Section::make("Create a post")
-                    ->collapsible()
+
+                Tabs::make('create new post')->tabs([
+                    Tab::make('Tab 1')
+                    ->icon('heroicon-m-inbox')
                     ->schema([
                         TextInput::make('title')->rules(['min:2', 'max:10'])->required(),
                         TextInput::make('slug')->unique(ignoreRecord: true)->required(),
                         Select::make('category_id')
                             ->label('Categories')
                             ->searchable()
-                            ->relationship('category','name'),
+                            ->relationship('category', 'name'),
                         ColorPicker::make('color')->required(),
+                    ]),
+                    Tab::make('Content')->schema([
                         MarkdownEditor::make('content')->required()->columnSpanFull(),
-                    ])->columnSpan(2)->columns(2),
+                    ]),
+                    Tab::make('Meta')->schema([
+                        FileUpload::make('thumbnail')->disk('public')->directory('thumbnails'),
+                        TagsInput::make('tags')->required(),
+                        Checkbox::make('published')
+                    ])
+                ])->columnSpanFull()->persistTabInQueryString(),
 
-                Group::make()->schema([
-                    Section::make("Image")
-                        ->collapsible()
-                        ->schema([
-                            FileUpload::make('thumbnail')->disk('public')->directory('thumbnails'),
-
-                        ])->columnSpan(1),
-
-                ]),
-
-            ])->columns(3);
+            ])->columns(1);
     }
 
     public static function table(Table $table): Table
@@ -96,7 +100,11 @@ class PostResource extends Resource
                     ->toggleable()
             ])
             ->filters([
-                //
+                Filter::make('Published Posts')->query(
+                    function($query){
+                        return $query->where('published', true);
+                    }
+                )
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -112,7 +120,8 @@ class PostResource extends Resource
     public static function getRelations(): array
     {
         return [
-            AuthorsRelationManager::class
+            AuthorsRelationManager::class,
+            CommentsRelationManager::class
         ];
     }
 
